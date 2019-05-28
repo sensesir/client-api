@@ -1,0 +1,13 @@
+{
+  "name": "gdoor-client-api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {},
+  "dependencies": {
+    "axios": "^0.18.0",
+    "aws-sdk": "^2.446.0",
+    "uuid-v4": "0.1.0"
+  },
+  "devDependencies": {}
+}
