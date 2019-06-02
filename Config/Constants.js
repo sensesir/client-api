@@ -14,7 +14,10 @@ module.exports = {
     CATEGORY_EVENT:   "event",
     CATEGORY_COMMAND: "command",
 
-    // Events
+    // User events
+    ENDPOINT_NEW_USER:      "/user/createNewUser",
+
+    // IOT Events
     EVENT_FIRST_BOOT:       "firstBoot",
     EVENT_BOOT:             "boot",
     EVENT_DOOR_STATE:       "doorStateChange",

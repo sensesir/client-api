@@ -1,0 +1,7 @@
+{
+    "path": "/user/createNewUser",
+    "username": "Tony Stark",
+    "email": "tony@marvel.com",
+    "password": "testing123",
+    "appVersion": "1.0.0"
+}

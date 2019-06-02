@@ -6,9 +6,18 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs8.10
       CodeUri: .
       Description: ''
       MemorySize: 192
       Timeout: 30
-      Role: 'arn:aws:iam::126281209629:role/service-role/GDoorClientAPI-role-q2h0j5rs'
+      Role: 'arn:aws:iam::126281209629:role/service-role/GDoorClientApi'
+      Environment:
+        Variables:
+          IOT_REGION: 'eu-west-1'
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /user/createNewUser
+            Method: POST
