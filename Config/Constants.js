@@ -6,7 +6,7 @@ module.exports = {
     TABLE_ANALYTICS: "AnalyticEvents",
     
     // Table Indices
-    TABLE_USERS_EMAIL_INDEX: "email-index",
+    TABLE_USERS_EMAIL_INDEX: "EmailIndex",
 
     // Components
     COMPONENT_SENSOR: "Sensor",
@@ -20,6 +20,10 @@ module.exports = {
     // User events
     ENDPOINT_NEW_USER:      "/user/createNewUser",
     ENDPOINT_LOGIN:         "/user/login",
+    ENDPOINT_UPDATE_DATA:   "/user/updateData",
+    ENDPOINT_ACTIVE_DAY:    "/user/activeDay",
+    ENDPOINT_ADD_SENSOR:    "/user/addSensor",
+    ENDPOINT_ACTUATE_DOOR:  "/user/actuateDoor",
 
     // User info updates
     USER_UPDATE_ADDRESS:    "addressUpdate",

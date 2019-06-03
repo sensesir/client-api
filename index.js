@@ -24,16 +24,37 @@ exports.handler = async (event) => {
     } 
 }
 
-const routeRequest = async (event) => {
-    const path = event.path;
+const routeRequest = async (request) => {
+    const path = request.path;
+    const payload = request.body ? JSON.parse(request.body) : request;
 
     if (path === Constants.ENDPOINT_NEW_USER) {
-        let result = await UserApi.createNewUser(event);
+        let result = await UserApi.createNewUser(payload);
         return result;
     }
 
     else if (path === Constants.ENDPOINT_LOGIN) {
-        let result = await UserApi.logUserIn(event);
+        let result = await UserApi.logUserIn(payload);
+        return result;
+    }
+
+    else if (path === Constants.ENDPOINT_UPDATE_DATA) {
+        let result = await UserApi.updateUserDetails(payload);
+        return result;
+    }
+
+    else if (path === Constants.ENDPOINT_ACTIVE_DAY) {
+        let result = await UserApi.activeDay(request);  // special case - we need the headers
+        return result;
+    }
+
+    else if (path === Constants.ENDPOINT_ADD_SENSOR) {
+        let result = await UserApi.addSensor(payload);
+        return result;
+    }
+
+    else if (path === Constants.ENDPOINT_ACTUATE_DOOR) {
+        let result = await UserApi.actuateDoor(payload);
         return result;
     }
 
