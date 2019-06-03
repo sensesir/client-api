@@ -30,7 +30,7 @@ module.exports = {
             appVersion: appVersion,
             city: "Unknown",
             country: "Unknown",
-            email: email,
+            email: email.toLowerCase(),
             firstName: names.userFirstName,
             lastName: names.userLastName,
             lastSeen: currentDate,
@@ -59,7 +59,7 @@ module.exports = {
 
     logUserIn: async (userCreds) => {
         console.log("USER API: Attempting to log user in with email & password");
-        let email = userCreds.email;
+        let email = userCreds.email.toLowerCase();
         let passwordAttempt = userCreds.password;
 
         let searchResults = await DynamoDBApi.searchForItem(Constants.TABLE_USERS, Constants.TABLE_USERS_EMAIL_INDEX, "email", email);
@@ -74,6 +74,7 @@ module.exports = {
                     body: JSON.stringify({
                         success: true,
                         message: "Successful login",
+                        userData: userData,
                         userUID: userData.userUID
                     })   
                 }
@@ -108,7 +109,7 @@ module.exports = {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: false,
-                    message: "No user found for address"
+                    message: "No user found for email address"
                 })
             }
         }
@@ -175,33 +176,36 @@ module.exports = {
     },
 
     activeDay: async (request) => {
-        console.log("USER API: Incrementing active days");
-        const payload = JSON.parse(request.body);
-        const locationData = await getLocationFromIP(request);
+        // Wrapper
+        return await logActiveDay(request);
+    },
 
+    updateLastSeen: async (request) => {
+        console.log("USER API: Updating user last seen");
+        const payload = JSON.parse(request.body);
+        const userUID = payload.userUID;
+        const newLastSeen = new Date().toISOString();
+        
+        let activeDayRes;
+        let requiresActiveDay = await assessActiveDay(userUID, newLastSeen);
+        if (requiresActiveDay) { activeDayRes = await logActiveDay(request) }
+
+        // Update the last seen time
         const update = {
             TableName: Constants.TABLE_USERS,
-            Key: { 
-                userUID: payload.userUID 
-            },
-            UpdateExpression: `set city = :city,
-                               country = :country,
-                               activeDays = activeDays + :addDay`,
-            ExpressionAttributeValues: { 
-                ":city": locationData.city ? locationData.city : "None",
-                ":country": locationData.country ? locationData.country : "None",
-                ":addDay": 1
-            },
-            ReturnValues:"UPDATED_NEW"            
-        };
+            Key: { userUID: userUID },
+            UpdateExpression: `set lastSeen = :lastSeen`,
+            ExpressionAttributeValues: { ":lastSeen": newLastSeen },
+            ReturnValues:"UPDATED_NEW"     
+        }
 
         let result = await DynamoDBApi.updateDocument(update);
         if (result === true) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({
+                body: JSON.stringify({ 
                     success: true,
-                    message: "Updated active days"
+                    message: "Updated last seen time" 
                 })
             };
         }
@@ -278,6 +282,35 @@ module.exports = {
             }
         } 
         else { return result }
+    },
+
+    getSensorState: async (payload) => {
+        console.log(`USER API: Getting sensor state for user.`);
+        const userData = await getUserData(payload.userUID);
+        const sensorUID = userData.sensorUID;
+
+        if (sensorUID === "None") {
+            console.warn("USER API: User tried to get sensor state without having a sensor");
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: "No sensor allocated to user, please add a sensor" })
+            }
+        }
+
+        // NOTE! This is bad microservice design, but for the sake of agile dev, it is overlooked
+        const itemIdentifiers = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: sensorUID}
+        }
+    
+        const sensorData = await DynamoDBApi.getItem(itemIdentifiers);
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                online: sensorData.online,
+                lastPing: sensorData.lastPing
+            })
+        }
     },
 
     addLinkedAccount: async (eventData) => {
@@ -378,4 +411,53 @@ const getSensorData = async (sensorUID) => {
         Key: { sensorUID: sensorUID}
     }
     return await DynamoDBApi.getItem(itemIdentifiers);
+}
+
+const assessActiveDay = async (userUID, newLastSeenISO) => {
+    const userProfile = await getUserData(userUID);
+    const oldLastSeen = new Date(userProfile.lastSeen);
+    const newLastSeen = new Date(newLastSeenISO);
+
+    // Test for equality across year, date and day
+    if (oldLastSeen.getFullYear() !== newLastSeen.getFullYear()) { return true }
+    if (oldLastSeen.getMonth() !== newLastSeen.getMonth()) { return true }
+    if (oldLastSeen.getDate() !== newLastSeen.getDate()) { return true }
+
+    console.log("USER API: Not updating active days, last seen today.")
+    return false;
+}
+
+const logActiveDay = async (request) => {
+    console.log("USER API: Incrementing active days");
+    const payload = JSON.parse(request.body);
+    const locationData = await getLocationFromIP(request);
+
+    const update = {
+        TableName: Constants.TABLE_USERS,
+        Key: { userUID: payload.userUID },
+        UpdateExpression: `set city = :city,
+                           country = :country,
+                           #re = :re,
+                           activeDays = activeDays + :addDay`,
+        ExpressionAttributeValues: { 
+            ":city":    locationData.city ? locationData.city : "None",
+            ":country": locationData.country ? locationData.country : "None",
+            ":re":  locationData.region ? locationData.region : "None",
+            ":addDay": 1
+        },
+        ExpressionAttributeNames: { "#re": "region" }, // Reqired because "online" keyword is reserved
+        ReturnValues:"UPDATED_NEW"            
+    };
+
+    let result = await DynamoDBApi.updateDocument(update);
+    if (result === true) {
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                success: true,
+                message: "Updated active days"
+            })
+        };
+    }
+    else { return result }
 }

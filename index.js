@@ -61,6 +61,16 @@ const routeRequest = async (request) => {
         return result;
     }
 
+    else if (path === Constants.ENDPOINT_LAST_SEEN) {
+        let result = await UserApi.updateLastSeen(request);
+        return result;
+    }
+
+    else if (path === Constants.ENDPOINT_SENSOR_STATE) {
+        let result = await UserApi.getSensorState(payload);
+        return result;
+    }
+
     else {
         throw new Error(`INDEX: Unknown path for request => ${path}`);
     }
