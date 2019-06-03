@@ -19,7 +19,10 @@ exports.handler = async (event) => {
         // todo: handle
         return {
             statusCode: 500,
-            message: error.message
+            body: JSON.stringify({
+                message: error.message,
+                stack: error.stack
+            })
         }
     } 
 }

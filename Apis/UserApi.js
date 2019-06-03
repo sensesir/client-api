@@ -45,7 +45,15 @@ module.exports = {
         }
 
         let result = await DynamoDBApi.createItem(Constants.TABLE_USERS, newUserData);
-        if (result === true) { return { userUID: newUserUID } }
+        if (result === true) { 
+            return { 
+                statusCode: 200,
+                body: JSON.stringify({
+                    message: "Successfully created new user",
+                    userUID: newUserUID 
+                })
+            } 
+        }
         else { return result };
     },
 
@@ -63,17 +71,21 @@ module.exports = {
                 console.log("USER API: Correct password");
                 return {
                     statusCode: 200,
-                    success: true,
-                    message: "Successful login",
-                    userUID: userData.userUID
+                    body: JSON.stringify({
+                        success: true,
+                        message: "Successful login",
+                        userUID: userData.userUID
+                    })   
                 }
             } else {
                 console.log("USER API: Incorrect password");
                 return {
                     statusCode: 200,
-                    success: false,
-                    message: "Incorrect password",
-                    userUID: userData.userUID
+                    body: JSON.stringify({
+                        success: false,
+                        message: "Incorrect password",
+                        userUID: null
+                    })
                 }
             }
         }
@@ -83,8 +95,10 @@ module.exports = {
             console.log(`USER API: Multiple accounts found for user email => ${email}`);
             return {
                 statusCode: 404,
-                success: false,
-                message: "Error: Multiple accounts found for email address"
+                body: JSON.stringify({
+                    success: false,
+                    message: "Error: Multiple accounts found for email address"
+                })
             }
         } 
         
@@ -92,8 +106,10 @@ module.exports = {
             console.log(`USER API: No user found for address => ${email}`);
             return {
                 statusCode: 200,
-                success: false,
-                message: "No user found for address"
+                body: JSON.stringify({
+                    success: false,
+                    message: "No user found for address"
+                })
             }
         }
     },
@@ -149,7 +165,10 @@ module.exports = {
         if (result === true) {
             return {
                 statusCode: 200,
-                message: "Updated user profile"
+                body: JSON.stringify({ 
+                    success: true,
+                    message: "Updated user profile" 
+                })
             };
         }
         else { return result }
@@ -180,7 +199,10 @@ module.exports = {
         if (result === true) {
             return {
                 statusCode: 200,
-                message: "Updated active days"
+                body: JSON.stringify({
+                    success: true,
+                    message: "Updated active days"
+                })
             };
         }
         else { return result }
@@ -200,7 +222,10 @@ module.exports = {
         if (result === true) {
             return {
                 statusCode: 200,
-                message: "Added sensor"
+                body: JSON.stringify({
+                    success: true,
+                    message: "Added sensor"
+                })
             };
         }
         else { return result }
@@ -235,7 +260,9 @@ module.exports = {
         if (res.status !== 200) {
             return {
                 statusCode: res.status,
-                message: res.statusText 
+                body: JSON.stringify({
+                    message: res.statusText 
+                })
             }
         }
 
@@ -244,7 +271,10 @@ module.exports = {
         if (result === true) {
             return {
                 statusCode: 200,
-                message: "Successfully actuated door"
+                body: JSON.stringify({
+                    success: true,
+                    message: "Successfully actuated door"
+                })
             }
         } 
         else { return result }
