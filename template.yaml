@@ -15,6 +15,7 @@ Resources:
       Environment:
         Variables:
           IOT_REGION: 'eu-west-1'
+          API_KEY: 'ByjI6NHlPd7knghHSBCKJ871aJnKyfBw18BteCWK'
       Events:
         Api1:
           Type: Api

@@ -5,6 +5,9 @@ module.exports = {
     TABLE_ERRORS:    "ErrorLog",
     TABLE_ANALYTICS: "AnalyticEvents",
     
+    // Table Indices
+    TABLE_USERS_EMAIL_INDEX: "email-index",
+
     // Components
     COMPONENT_SENSOR: "Sensor",
     COMPONENT_BACKEND: "Backend",
@@ -16,6 +19,13 @@ module.exports = {
 
     // User events
     ENDPOINT_NEW_USER:      "/user/createNewUser",
+    ENDPOINT_LOGIN:         "/user/login",
+
+    // User info updates
+    USER_UPDATE_ADDRESS:    "addressUpdate",
+    USER_UPDATE_NAME:       "nameUpdate",
+    USER_UPDATE_MOBILE:     "mobileNumberUpdate",
+    USER_UPDATE_EMAIL:      "emailUpdate",
 
     // IOT Events
     EVENT_FIRST_BOOT:       "firstBoot",

@@ -14,7 +14,7 @@ module.exports = {
     createNewUser: async (userData) => {
         console.log("USER API: Creating new user");
         const username = userData.username;
-        const password = userData.userPassword;
+        const password = userData.password;
         const email = userData.email;
         const appVersion = userData.appVersion;
         let names = processUsername(username);
@@ -48,16 +48,86 @@ module.exports = {
         else { return result };
     },
 
-    logUserIn: async (userData) => {
+    logUserIn: async (userCreds) => {
         console.log("USER API: Attempting to log user in with email & password");
-        let email = userData.email;
-        let password = userData.userPassword;
+        let email = userCreds.email;
+        let passwordAttempt = userCreds.password;
 
-        let searchResults = DynamoDBApi.searchForItem(Constants.TABLE_USERS, "email", email);
+        let searchResults = await DynamoDBApi.searchForItem(Constants.TABLE_USERS, Constants.TABLE_USERS_EMAIL_INDEX, "email", email);
         if (searchResults.length === 1) {
             console.log("USER API: Found user for email, testing password");
-            // Extract user password
+            let userData = searchResults[0];
+
+            if (userData.password === passwordAttempt) {
+                console.log("USER API: Correct password");
+                return {
+                    statusCode: 200,
+                    success: true,
+                    message: "Successful login",
+                    userUID: userData.userUID
+                }
+            } else {
+                console.log("USER API: Incorrect password");
+                return {
+                    statusCode: 200,
+                    success: false,
+                    message: "Incorrect password",
+                    userUID: userData.userUID
+                }
+            }
         }
+
+        else if (searchResults.length > 1) {
+            // Log error to slack and tag @peza
+            console.log(`USER API: Multiple accounts found for user email => ${email}`);
+            return {
+                statusCode: 404,
+                success: false,
+                message: "Error: Multiple accounts found for email address"
+            }
+        } 
+        
+        else {
+            console.log(`USER API: No user found for address => ${email}`);
+            return {
+                statusCode: 200,
+                success: false,
+                message: "No user found for address"
+            }
+        }
+    },
+
+    updateUserDetails: async (updateData) => {
+        // Figure out which update it is
+        let updatePair;
+        if (updateData.updateType === Constants.USER_UPDATE_ADDRESS) { updateData = { address: updateData.updateValue } } 
+        else if (updateData.updateType === Constants.USER_UPDATE_EMAIL) { updateData = { email: updateData.updateValue } } 
+        else if (updateData.updateType === Constants.USER_UPDATE_MOBILE) { updateData = { mobileNumber: updateData.updateValue } } 
+        else if (updateData.updateType === Constants.USER_UPDATE_NAME) { 
+            // Special case - 
+            let names = processUsername(updateData.updateValue);
+            updateData = { 
+                firstName: names[0],
+                lastName: names[1]
+            }; 
+        }
+
+        console.log(`USER API: Updating user information => ${updateData}`);
+        let update = {
+            TableName: Constants.TABLE_USERS,
+
+        }
+
+        let result = await DynamoDBApi.updateDocument(update);
+        return result;
+    },
+
+    actuateDoor: async (userUID) => {
+
+    },
+
+    addLinkedAccount: async (eventData) => {
+
     }
 }
 

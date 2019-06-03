@@ -9,59 +9,74 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient();
 
-module.exports = {
-    createItem: (tableName, itemData) => {
-        return new Promise((resolve, reject) => {
-            const itemToCreate = {
-                TableName: tableName,
-                Item: itemData
-            }
+class DynamoDBInterface {}
 
-            docClient.put(itemToCreate, (error, data) => {
-                if (error) {
-                    return reject(error);
-                }
-    
-                console.log(`DYNAMODB: Created new item`);
-                resolve(true);
-            });
-        });
-    },
-    
-    updateDocument: (updateData) => {
-        return new Promise((resolve, reject) => {   
-            docClient.update(updateData, (error, data) => {
-                if (error) {
-                    reject(error);
-                }
-    
-                console.log(`DYNAMODB: Updated sensor document item`);
-                resolve(true);
-            });
-        });
-    },
-    
-    getItem: (identifiers) => {
-        return new Promise((resolve, reject) => {
-            docClient.get(identifiers, (error, data) => {
-                if (error) {
-                    reject(error);
-                }
-                resolve(data.Item);
-            });
-        });
-    },
-
-    searchForItem: async (tableName, searchKey, searchValue) => {
-        const searchParams = {
+DynamoDBInterface.createItem = (tableName, itemData) => {
+    return new Promise((resolve, reject) => {
+        const itemToCreate = {
             TableName: tableName,
-            KeyConditionExpression: `${searchKey} = :value`,
-            ExpressionAttributeValues: {
-                ":value": searchValue
-            }
-        };
+            Item: itemData
+        }
 
-        let items = await this.getItem(searchParams);
-        return items;
-    }
-}
+        docClient.put(itemToCreate, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+    
+            console.log(`DYNAMODB: Created new item`);
+            return resolve(true);
+        });
+    });
+};
+    
+DynamoDBInterface.updateDocument = (updateData) => {
+    return new Promise((resolve, reject) => {   
+        docClient.update(updateData, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+
+            console.log(`DYNAMODB: Updated sensor document item`);
+            return resolve(true);
+        });
+    });
+};
+    
+DynamoDBInterface.getItem = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.get(identifiers, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(data.Item);
+        });
+    });
+};
+
+DynamoDBInterface.query = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.query(identifiers, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(data.Items);
+        });
+    });
+};
+
+DynamoDBInterface.searchForItem = async (tableName, index, searchKey, searchValue) => {
+    const searchParams = {
+        TableName: tableName,
+        IndexName: index,
+        KeyConditionExpression: `${searchKey} = :value`,
+        ExpressionAttributeValues: {
+            ":value": searchValue
+        }
+        // May need ProjectionExpression {userUID}
+    };
+
+    let items = await DynamoDBInterface.query(searchParams);
+    return items;
+};
+
+module.exports = DynamoDBInterface;

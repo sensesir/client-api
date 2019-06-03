@@ -32,6 +32,11 @@ const routeRequest = async (event) => {
         return result;
     }
 
+    else if (path === Constants.ENDPOINT_LOGIN) {
+        let result = await UserApi.logUserIn(event);
+        return result;
+    }
+
     else {
         throw new Error(`INDEX: Unknown path for request => ${path}`);
     }
