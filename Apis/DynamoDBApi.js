@@ -47,11 +47,28 @@ DynamoDBInterface.getItem = (identifiers) => {
         docClient.get(identifiers, (error, data) => {
             if (error) {
                 return reject(error);
+            } else if (!data.Item) {
+                return reject(new Error(`Couldn't find item for identifier => ${identifiers.key}`));
             }
+
             return resolve(data.Item);
         });
     });
 };
+
+DynamoDBInterface.itemExists = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.get(identifiers, (error, data) => {
+            if (error) {
+                return reject(error);
+            } else if (!data.Item) {
+                return resolve(false);
+            } else {
+                return resolve(true);
+            }
+        });
+    });
+}
 
 DynamoDBInterface.query = (identifiers) => {
     return new Promise((resolve, reject) => {

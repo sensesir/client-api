@@ -284,6 +284,44 @@ module.exports = {
         else { return result }
     },
 
+    getSensorData: async (payload) => {
+        console.log("USER API: Getting all requisite user data");
+        const userData = await getUserData(payload.userUID);
+        const sensorUID = userData.sensorUID;
+
+        if (sensorUID == "None") {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ 
+                    message: "No sensor added", 
+                    sensorUID: "None"
+                })
+            }
+        }
+
+        console.log("USER API: User has initialised sensor, fetching data");
+
+        const itemIdentifiers = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: sensorUID}
+        }
+    
+        const result = await DynamoDBApi.getItem(itemIdentifiers);
+        if (result instanceof Error) { return result }
+        else {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    online:         result.online,
+                    lastPing:       result.lastPing,
+                    networkDown:    result.networkDown,
+                    doorState:      result.doorState,
+                    networkState:   result.networkState
+                })
+            }
+        }
+    },
+
     getSensorState: async (payload) => {
         console.log(`USER API: Getting sensor state for user.`);
         const userData = await getUserData(payload.userUID);
@@ -303,14 +341,55 @@ module.exports = {
             Key: { sensorUID: sensorUID}
         }
     
-        const sensorData = await DynamoDBApi.getItem(itemIdentifiers);
+        const result = await DynamoDBApi.getItem(itemIdentifiers);
+        if (result instanceof Error) { return result }
         return {
             statusCode: 200,
             body: JSON.stringify({
-                online: sensorData.online,
-                lastPing: sensorData.lastPing
+                online:   result.online,
+                lastPing: result.lastPing,
             })
         }
+    },
+
+    initializeSensor: async (payload) => {
+        console.log("USER API: Creating sensor profile if required");
+
+        // Check if sensor beat the client to item creation
+        const itemIdentifiers = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: payload.sensorUID }
+        } 
+
+        const sensorDataExists = await DynamoDBApi.itemExists(itemIdentifiers);
+        if (sensorDataExists) {
+            console.log(`USER API: Sensor item has been initialized, just adding user UID`);
+            return await addUserUIDToSensorItem(payload.sensorUID, payload.userUID);
+        }
+
+        console.log("USER API: Sensor data doesn't exist, creating");
+        const sensorTemplate = generateBlankSensorObject(payload.sensorUID, payload.userUID)
+        let sensorCreateRes = await DynamoDBApi.createItem(Constants.TABLE_SENSORS, sensorTemplate)
+        let userItemUpdateRes = await addSensorUIDtoUserItem(payload.sensorUID, payload.userUID);
+
+        if ((sensorCreateRes === true) && (userItemUpdateRes === true)) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ 
+                    success: true,
+                    message: "Added new user sensor" 
+                })
+            };
+        } else {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    success: false,
+                    message: "Failed to update user & sensor items for new sensor"
+                })
+            }
+        }
+
     },
 
     addLinkedAccount: async (eventData) => {
@@ -460,4 +539,67 @@ const logActiveDay = async (request) => {
         };
     }
     else { return result }
+}
+
+const generateBlankSensorObject = (sensorUID, userUID) => {
+    return {
+        doorCloseCommands: 0,
+        doorOpenCommands: 0,
+        doorState: "unknown",
+        downTime: 0,
+        firmwareVersion: "None",
+        firstBoot: "None",
+        ip: "None",
+        lastBoot: "None",
+        lastPing: "None",
+        networkDown: "None",
+        networkUp: "None",
+        online: false,
+        reconnections: 0,
+        sensorUID: sensorUID,
+        userUID: userUID
+    }
+} 
+
+const addUserUIDToSensorItem = async (sensorUID, userUID) => {
+    const sensorUpdate = {
+        TableName: Constants.TABLE_SENSORS,
+        Key: { sensorUID: sensorUID },
+        UpdateExpression: `set userUID = :userUID`,
+        ExpressionAttributeValues: { ":userUID": userUID },
+        ReturnValues:"UPDATED_NEW"     
+    }
+
+    let sensorItemUpdateRes = await DynamoDBApi.updateDocument(sensorUpdate);
+    let userItemUpdateRes = await addSensorUIDtoUserItem(sensorUID, userUID);
+
+    if ((sensorItemUpdateRes === true) && (userItemUpdateRes === true)) {
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ 
+                success: true,
+                message: "Added new user sensor" 
+            })
+        };
+    } else {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                success: false,
+                message: "Failed to update user & sensor items for new sensor"
+            })
+        }
+    }
+}
+
+const addSensorUIDtoUserItem = async (sensorUID, userUID) => {
+    const userItemUpdate = {
+        TableName: Constants.TABLE_USERS,
+        Key: { userUID: userUID },
+        UpdateExpression: `set sensorUID = :sensorUID`,
+        ExpressionAttributeValues: { ":sensorUID": sensorUID },
+        ReturnValues:"UPDATED_NEW"     
+    }
+
+    return await DynamoDBApi.updateDocument(userItemUpdate);
 }

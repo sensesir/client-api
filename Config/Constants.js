@@ -24,8 +24,10 @@ module.exports = {
     ENDPOINT_ACTIVE_DAY:    "/user/activeDay",
     ENDPOINT_ADD_SENSOR:    "/user/addSensor",
     ENDPOINT_ACTUATE_DOOR:  "/user/actuateDoor",
+    ENDPOINT_SENSOR_DATA:   "/user/getSensorData",
     ENDPOINT_LAST_SEEN:     "/user/updateLastSeen",
     ENDPOINT_SENSOR_STATE:  "/user/getSensorState",
+    ENDPOINT_INIT_SENSOR:   "/user/initializeSensor",
 
     // User info updates
     USER_UPDATE_ADDRESS:    "addressUpdate",

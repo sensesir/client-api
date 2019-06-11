@@ -66,8 +66,18 @@ const routeRequest = async (request) => {
         return result;
     }
 
+    else if (path == Constants.ENDPOINT_SENSOR_DATA) {
+        let result = await UserApi.getSensorData(payload);
+        return result;
+    }
+
     else if (path === Constants.ENDPOINT_SENSOR_STATE) {
         let result = await UserApi.getSensorState(payload);
+        return result;
+    }
+
+    else if (path == Constants.ENDPOINT_INIT_SENSOR) {
+        let result = await UserApi.initializeSensor(payload);
         return result;
     }
 
