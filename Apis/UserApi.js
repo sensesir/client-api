@@ -316,7 +316,8 @@ module.exports = {
                     lastPing:       result.lastPing,
                     networkDown:    result.networkDown,
                     doorState:      result.doorState,
-                    networkState:   result.networkState
+                    networkState:   result.networkState,
+                    sensorUID:      result.sensorUID
                 })
             }
         }
