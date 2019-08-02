@@ -314,6 +314,7 @@ module.exports = {
                 body: JSON.stringify({
                     online:         result.online,
                     lastPing:       result.lastPing,
+                    lastRSSI:       result.lastRSSI ? result.lastRSSI : -100.0,     // Legacy bridge
                     networkDown:    result.networkDown,
                     doorState:      result.doorState,
                     networkState:   result.networkState,
