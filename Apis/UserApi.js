@@ -364,17 +364,28 @@ module.exports = {
         } 
 
         const sensorDataExists = await DynamoDBApi.itemExists(itemIdentifiers);
+        let sensorData; // to be used later
+
         if (sensorDataExists) {
             console.log(`USER API: Sensor item has been initialized, just adding user UID`);
-            return await addUserUIDToSensorItem(payload.sensorUID, payload.userUID);
+            await addUserUIDToSensorItem(payload.sensorUID, payload.userUID);
+            sensorData = await getSensorData(payload.sensorUID);
+        } 
+        
+        else {
+            console.log("USER API: Sensor data doesn't exist, creating");
+            const sensorTemplate = generateBlankSensorObject(payload.sensorUID, payload.userUID)
+            await DynamoDBApi.createItem(Constants.TABLE_SENSORS, sensorTemplate)
+            await addSensorUIDtoUserItem(payload.sensorUID, payload.userUID);
         }
 
-        console.log("USER API: Sensor data doesn't exist, creating");
-        const sensorTemplate = generateBlankSensorObject(payload.sensorUID, payload.userUID)
-        let sensorCreateRes = await DynamoDBApi.createItem(Constants.TABLE_SENSORS, sensorTemplate)
-        let userItemUpdateRes = await addSensorUIDtoUserItem(payload.sensorUID, payload.userUID);
-
-        if ((sensorCreateRes === true) && (userItemUpdateRes === true)) {
+        // Return the sensor data if it has been created - app will immediately link
+        if (sensorData) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify(sensorData)
+            };
+        } else {
             return {
                 statusCode: 200,
                 body: JSON.stringify({ 
@@ -382,16 +393,7 @@ module.exports = {
                     message: "Added new user sensor" 
                 })
             };
-        } else {
-            return {
-                statusCode: 500,
-                body: JSON.stringify({
-                    success: false,
-                    message: "Failed to update user & sensor items for new sensor"
-                })
-            }
         }
-
     },
 
     addLinkedAccount: async (eventData) => {
