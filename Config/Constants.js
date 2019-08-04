@@ -28,6 +28,7 @@ module.exports = {
     ENDPOINT_LAST_SEEN:     "/user/updateLastSeen",
     ENDPOINT_SENSOR_STATE:  "/user/getSensorState",
     ENDPOINT_INIT_SENSOR:   "/user/initializeSensor",
+    ENDPOINT_PING:          "/user/ping",
 
     // User info updates
     USER_UPDATE_ADDRESS:    "addressUpdate",

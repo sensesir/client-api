@@ -370,7 +370,7 @@ module.exports = {
             console.log(`USER API: Sensor item has been initialized, just adding user UID`);
             await addUserUIDToSensorItem(payload.sensorUID, payload.userUID);
             sensorData = await getSensorData(payload.sensorUID);
-        } 
+        }
         
         else {
             console.log("USER API: Sensor data doesn't exist, creating");

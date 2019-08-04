@@ -81,6 +81,16 @@ const routeRequest = async (request) => {
         return result;
     }
 
+    else if (path === Constants.ENDPOINT_PING) {
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                success: true,
+                message: "OK"
+            })
+        }
+    }
+
     else {
         throw new Error(`INDEX: Unknown path for request => ${path}`);
     }
