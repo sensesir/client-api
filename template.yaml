@@ -20,6 +20,7 @@ Resources:
           IP_STACK_ROOT_URL: 'http://api.ipstack.com/'
           ACTUATE_SENSOR_API: 'https://eu4nnl75bb.execute-api.eu-west-1.amazonaws.com/dev/command'
           SENSOR_BACKEND_API_KEY: '8sBkjUhVQ9lZP3uigrpB3e2C66dmtaSaJwC3Mmy7'
+          BUGSNAG_API_KEY: 'f1bafa25f97492bf8650e8e3b6f76786'
       Events:
         Api1:
           Type: Api
