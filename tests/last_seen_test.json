@@ -102,6 +102,6 @@
         "domainName": "1hnr9288rb.execute-api.eu-west-1.amazonaws.com",
         "apiId": "1hnr9288rb"
     },
-    "body": "{\n\t\"userUID\": \"0527244f-5b92-458b-b994-b0c323991145\"\n}\n\n",
+    "body": "{\"userUID\": \"11f6c010-825f-4552-9ed5-8d40277f62d4\"}",
     "isBase64Encoded": false
 }

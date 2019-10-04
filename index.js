@@ -69,7 +69,7 @@ const routeRequest = async (request) => {
     }
 
     else if (path === Constants.ENDPOINT_LAST_SEEN) {
-        let result = await UserApi.updateLastSeen(request);
+        let result = await UserApi.updateLastSeen(payload, request);    // Requires both because of active day logging
         return result;
     }
 

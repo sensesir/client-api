@@ -17,9 +17,9 @@ module.exports = {
         const username = userData.username;
         const password = userData.password;
         const email = userData.email;
-        const appVersion = userData.appVersion;
+        const appVersion = userData.appVersion ? userData.appVersion : "None";
         let names = processUsername(username);
-
+     
         // Create new metrics for user 
         let newUserUID = UUID();
         const currentDate = new Date().toISOString();
@@ -43,6 +43,7 @@ module.exports = {
             signupDate: currentDate,
             userUID: newUserUID
         }
+        checkAllNewUserData(newUserData);
 
         let result = await DynamoDBApi.createItem(Constants.TABLE_USERS, newUserData);
         if (result === true) { 
@@ -180,9 +181,8 @@ module.exports = {
         return await logActiveDay(request);
     },
 
-    updateLastSeen: async (request) => {
+    updateLastSeen: async (payload, request) => {
         console.log("USER API: Updating user last seen");
-        const payload = JSON.parse(request.body);
         const userUID = payload.userUID;
         const newLastSeen = new Date().toISOString();
         
@@ -190,12 +190,19 @@ module.exports = {
         let requiresActiveDay = await assessActiveDay(userUID, newLastSeen);
         if (requiresActiveDay) { activeDayRes = await logActiveDay(request) }
 
+        // App version --> only in latest apps
+        let appVersion = payload.appVersion ? payload.appVersion : "None";
+
         // Update the last seen time
         const update = {
             TableName: Constants.TABLE_USERS,
             Key: { userUID: userUID },
-            UpdateExpression: `set lastSeen = :lastSeen`,
-            ExpressionAttributeValues: { ":lastSeen": newLastSeen },
+            UpdateExpression: `set lastSeen = :lastSeen,
+                               appVersion = :appVersion`,
+            ExpressionAttributeValues: { 
+                ":lastSeen": newLastSeen,
+                ":appVersion": appVersion 
+            },
             ReturnValues:"UPDATED_NEW"     
         }
 
@@ -412,6 +419,19 @@ const processUsername = (username) => {
     return {
         userFirstName: firstName,
         userLastName: lastName
+    }
+}
+
+const checkAllNewUserData = (newUserData) => {
+    for (let key in newUserData) {
+        const value = newUserData[key];
+
+        if (typeof value === "string") {
+            if (value.length < 1) {
+                const errorMsg = `Create new user: No value for key ${key} => Value = ${value}`;
+                throw new Error(errorMsg);        
+            }
+        }
     }
 }
 
